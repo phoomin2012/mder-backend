@@ -1,5 +1,6 @@
 import passport from 'passport'
 import { Strategy, ExtractJwt } from 'passport-jwt'
+import staffModel from '../model/staff'
 
 passport.use(new Strategy({
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -8,8 +9,7 @@ passport.use(new Strategy({
   audience: process.env.JWT_AUDIENCE,
 }, async (payload, done) => {
   // Fetch user data
-  // const user = await User.findByPk(payload.id)
-  const user = {}
+  const user = await staffModel.findById(payload.uid)
 
   if (user) {
     return done(null, user)
