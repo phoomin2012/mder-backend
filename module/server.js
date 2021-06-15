@@ -1,10 +1,12 @@
 import http from 'http'
 import Express from 'express'
-import IO from 'socket.io'
+import { Server } from 'socket.io'
 
 export const app = Express()
+
 const httpServer = http.createServer(app)
-export const io = IO(httpServer, {
+
+export const io = new Server(httpServer, {
 
 })
 
