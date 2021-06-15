@@ -5,6 +5,7 @@
   "author": "phoomin009 <phoomin009@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "date-fns": "^2.22.1",
     "express": "^4.17.1",
     "mongoose": "^5.12.13",
