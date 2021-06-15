@@ -5,9 +5,15 @@
   "author": "phoomin009 <phoomin009@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "date-fns": "^2.22.1",
     "express": "^4.17.1",
     "mongoose": "^5.12.13",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
     "socket.io": "^4.1.2"
+  },
+  "scripts": {
+    "start": "nodemon app"
   },
   "devDependencies": {
     "eslint": "^7.28.0",
@@ -15,5 +21,6 @@
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0"
-  }
+  },
+  "type": "module"
 }
