@@ -5,7 +5,7 @@ passport.use(new Strategy({
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
   secretOrKey: 'mder-secret-1234567890ABCabc!@#',
   issuer: process.env.JWT_ISSUER,
-  audience: process.env.JWT_AUDIENCE
+  audience: process.env.JWT_AUDIENCE,
 }, async (payload, done) => {
   // Fetch user data
   // const user = await User.findByPk(payload.id)
