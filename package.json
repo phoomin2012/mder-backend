@@ -13,14 +13,16 @@
     "socket.io": "^4.1.2"
   },
   "scripts": {
-    "start": "nodemon app --max_old_space_size=2048"
+    "start": "nodemon app --max_old_space_size=2048",
+    "test": "jest"
   },
   "devDependencies": {
     "eslint": "^7.28.0",
     "eslint-config-standard": "^16.0.3",
     "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^5.1.0"
+    "eslint-plugin-promise": "^5.1.0",
+    "jest": "^27.0.4"
   },
   "type": "module"
 }
