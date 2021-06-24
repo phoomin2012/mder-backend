@@ -9,7 +9,7 @@ passport.use(new Strategy({
   audience: process.env.JWT_AUDIENCE,
 }, async (payload, done) => {
   // Fetch user data
-  const user = await staffModel.findById(payload.uid)
+  const user = await staffModel.findById(payload.uid).exec()
 
   if (user) {
     return done(null, user)
