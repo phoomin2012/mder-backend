@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { jwtMiddleware } from '../middleware/passport'
 import bcrypt from 'bcrypt'
 import staffModel from '../model/staff'
+import { signJWT } from '../module/jwt'
 
 const route = Router()
 
@@ -19,8 +20,13 @@ route.post('/auth/login', async (req, res) => {
   }
 
   if (bcrypt.compareSync(req.body.password, user.password)) {
+    const token = signJWT({
+      uid: user._id,
+    })
+
     return res.json({
       success: true,
+      token,
       user: user,
     })
   }
