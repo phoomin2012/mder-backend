@@ -11,7 +11,8 @@
     "mongoose": "^5.12.13",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
-    "socket.io": "^4.1.2"
+    "socket.io": "^4.1.2",
+    "validator": "^13.6.0"
   },
   "scripts": {
     "start": "nodemon app --max_old_space_size=2048",
