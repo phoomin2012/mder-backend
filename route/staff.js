@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import staffModel, { StaffRole } from '../model/staff'
 import validator from 'validator'
+import staffModel, { StaffRole } from '../model/staff.js'
 
 const route = Router()
 

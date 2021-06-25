@@ -1,9 +1,13 @@
 import mongoose from 'mongoose'
 
-mongoose.connect('mongodb://localhost:28018/mder', {
+mongoose.connect('mongodb://127.0.0.1:28018/mder', {
   useCreateIndex: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}, () => {
-  console.log('🟢 Connect to database.')
+}, (error) => {
+  if (error) {
+    console.log('🔴 Error:', error)
+  } else {
+    console.log('🟢 Connect to database.')
+  }
 })
