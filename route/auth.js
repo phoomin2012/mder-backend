@@ -9,7 +9,7 @@ const route = Router()
 route.post('/auth/login', async (req, res) => {
   const formErrors = []
   if (!req.body.username) {
-    formErrors.push('useranme.empty')
+    formErrors.push('username.empty')
   }
 
   if (!req.body.password) {
@@ -28,10 +28,10 @@ route.post('/auth/login', async (req, res) => {
     username: req.body.username,
   }).exec()
 
-  if (user) {
+  if (!user) {
     return res.status(400).json({
       error: {
-        popup: 'auth.invalid',
+        form: ['password.invalid'],
       },
     })
   }
@@ -45,6 +45,12 @@ route.post('/auth/login', async (req, res) => {
       success: true,
       token,
       user: user,
+    })
+  } else {
+    return res.status(400).json({
+      error: {
+        form: ['password.invalid'],
+      },
     })
   }
 })
