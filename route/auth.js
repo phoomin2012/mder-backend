@@ -56,7 +56,9 @@ route.post('/auth/login', async (req, res) => {
 })
 
 route.get('/auth/user', jwtMiddleware, async (req, res) => {
-  return res.json(req.user)
+  return res.json({
+    user: req.user,
+  })
 })
 
 export default route
