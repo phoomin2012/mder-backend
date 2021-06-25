@@ -28,7 +28,7 @@ route.post('/auth/login', async (req, res) => {
     username: req.body.username,
   }).exec()
 
-  if (user) {
+  if (!user) {
     return res.status(400).json({
       error: {
         popup: 'auth.invalid',
