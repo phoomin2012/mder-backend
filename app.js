@@ -17,21 +17,22 @@ app.use('/api', staffRoute)
 
 // Socket handle
 io.on('connect', (socket) => {
-  console.log('New socket')
-  setTimeout(() => {
-    socket.emit('message', {
-      event: [
-        {
-          type: 'popup',
-          message: {
-            title: 'Test',
-            text: 'ทดสอบๆ',
-            icon: 'warning',
-          },
-        },
-      ],
-    })
-  }, 5000)
+  console.log('New socket:', socket.handshake.user)
+
+//   setTimeout(() => {
+//     socket.emit('message', {
+//       event: [
+//         {
+//           type: 'popup',
+//           message: {
+//             title: 'Test',
+//             text: 'ทดสอบๆ',
+//             icon: 'warning',
+//           },
+//         },
+//       ],
+//     })
+//   }, 5000)
 })
 
 startServer()
