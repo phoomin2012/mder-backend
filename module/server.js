@@ -10,7 +10,7 @@ app.use(Express.json())
 const httpServer = http.createServer(app)
 
 export const io = new Server(httpServer, {
-
+  path: '/api/realtime',
 })
 
 export function startServer () {
