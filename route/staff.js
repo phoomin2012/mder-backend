@@ -9,6 +9,11 @@ route.get('/staff', async (req, res) => {
   return res.json(staffs)
 })
 
+route.get('/staff/:id', async (req, res) => {
+  const staff = await staffModel.findById(req.params.id).exec()
+  return res.json(staff)
+})
+
 route.post('/staff', async (req, res) => {
   const formErrors = []
   if (!req.body.username) {
