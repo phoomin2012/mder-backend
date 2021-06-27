@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import validator from 'validator'
 import staffModel, { StaffRole } from '../model/staff.js'
+import { hashPassword } from '../module/password.js'
 
 const route = Router()
 
@@ -9,16 +10,34 @@ route.get('/staff', async (req, res) => {
   return res.json(staffs)
 })
 
+route.get('/staff/:id', async (req, res) => {
+  const staff = await staffModel.findById(req.params.id).exec()
+  return res.json(staff)
+})
+
 route.post('/staff', async (req, res) => {
   const formErrors = []
   if (!req.body.username) {
     formErrors.push('username.empty')
   } else if (validator.isEmpty(req.body.username.toString())) {
     formErrors.push('username.empty')
+  } else {
+    const staff = await staffModel.findOne({ username: req.body.username }).exec()
+    if (staff && !req.body.id) {
+      formErrors.push('username.exist')
+    } else if (staff && req.body.id && staff._id.toString() !== req.body.id) {
+      formErrors.push('username.exist')
+    }
   }
 
-  if (!req.body.password) {
-    formErrors.push('password.empty')
+  if (req.body.password) {
+    if (validator.isEmpty(req.body.password.toString())) {
+      formErrors.push('password.empty')
+    }
+  } else {
+    if (!req.body.id) {
+      formErrors.push('password.empty')
+    }
   }
 
   if (!req.body.name) {
@@ -50,10 +69,12 @@ route.post('/staff', async (req, res) => {
   try {
     if (req.body.id) {
     // Update
-      const staff = await staffModel.findById(req.params.id).exec()
+      const staff = await staffModel.findById(req.body.id).exec()
 
       staff.username = req.body.username
-      staff.password = req.body.password
+      if (req.body.password) {
+        staff.password = hashPassword(req.body.password)
+      }
       staff.name = req.body.name
       staff.lastName = req.body.lastName
       staff.role = req.body.role
@@ -67,7 +88,7 @@ route.post('/staff', async (req, res) => {
     // Create
       const staff = await staffModel.create({
         username: req.body.username,
-        password: req.body.password,
+        password: hashPassword(req.body.password),
         name: req.body.name,
         lastName: req.body.lastName,
         role: req.body.role,
@@ -91,7 +112,8 @@ route.delete('/staff/:id', async (req, res) => {
 
   if (staff) {
     await staff.remove()
-    return res.json({ success: true })
+    const staffs = await staffModel.find()
+    return res.json({ success: true, list: staffs })
   }
   return res.status(400).json({ success: false })
 })
