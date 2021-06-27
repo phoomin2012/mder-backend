@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import validator from 'validator'
 import staffModel, { StaffRole } from '../model/staff.js'
+import { hashPassword } from '../module/password.js'
 
 const route = Router()
 
@@ -20,10 +21,23 @@ route.post('/staff', async (req, res) => {
     formErrors.push('username.empty')
   } else if (validator.isEmpty(req.body.username.toString())) {
     formErrors.push('username.empty')
+  } else {
+    const staff = await staffModel.findOne({ username: req.body.username }).exec()
+    if (staff && !req.body.id) {
+      formErrors.push('username.exist')
+    } else if (staff && req.body.id && staff._id.toString() !== req.body.id) {
+      formErrors.push('username.exist')
+    }
   }
 
-  if (!req.body.password) {
-    formErrors.push('password.empty')
+  if (req.body.password) {
+    if (validator.isEmpty(req.body.password.toString())) {
+      formErrors.push('password.empty')
+    }
+  } else {
+    if (!req.body.id) {
+      formErrors.push('password.empty')
+    }
   }
 
   if (!req.body.name) {
@@ -55,10 +69,12 @@ route.post('/staff', async (req, res) => {
   try {
     if (req.body.id) {
     // Update
-      const staff = await staffModel.findById(req.params.id).exec()
+      const staff = await staffModel.findById(req.body.id).exec()
 
       staff.username = req.body.username
-      staff.password = req.body.password
+      if (req.body.password) {
+        staff.password = hashPassword(req.body.password)
+      }
       staff.name = req.body.name
       staff.lastName = req.body.lastName
       staff.role = req.body.role
