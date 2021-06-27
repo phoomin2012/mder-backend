@@ -88,7 +88,7 @@ route.post('/staff', async (req, res) => {
     // Create
       const staff = await staffModel.create({
         username: req.body.username,
-        password: req.body.password,
+        password: hashPassword(req.body.password),
         name: req.body.name,
         lastName: req.body.lastName,
         role: req.body.role,
@@ -112,7 +112,8 @@ route.delete('/staff/:id', async (req, res) => {
 
   if (staff) {
     await staff.remove()
-    return res.json({ success: true })
+    const staffs = await staffModel.find()
+    return res.json({ success: true, list: staffs })
   }
   return res.status(400).json({ success: false })
 })
