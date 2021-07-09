@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "nodemon app --max_old_space_size=2048",
-    "test": "jest"
+    "test": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
