@@ -5,17 +5,17 @@ import { hashPassword } from '../module/password.js'
 
 const route = Router()
 
-route.get('/staff', async (req, res) => {
+route.get('/staff', async function fetchAllStaff (req, res) {
   const staffs = await staffModel.find()
   return res.json(staffs)
 })
 
-route.get('/staff/:id', async (req, res) => {
+route.get('/staff/:id', async function fetchStaff (req, res) {
   const staff = await staffModel.findById(req.params.id).exec()
   return res.json(staff)
 })
 
-route.post('/staff', async (req, res) => {
+route.post('/staff', async function CreateOrUpdateStaff (req, res) {
   const formErrors = []
   if (!req.body.username) {
     formErrors.push('username.empty')
@@ -107,7 +107,7 @@ route.post('/staff', async (req, res) => {
   }
 })
 
-route.delete('/staff/:id', async (req, res) => {
+route.delete('/staff/:id', async function removeStaff (req, res) {
   const staff = await staffModel.findById(req.params.id).exec()
 
   if (staff) {

@@ -6,7 +6,7 @@ import { signJWT } from '../module/jwt.js'
 
 const route = Router()
 
-route.post('/auth/login', async (req, res) => {
+route.post('/auth/login', async function login (req, res) {
   const formErrors = []
   if (!req.body.username) {
     formErrors.push('username.empty')
@@ -55,10 +55,14 @@ route.post('/auth/login', async (req, res) => {
   }
 })
 
-route.get('/auth/user', jwtMiddleware, async (req, res) => {
+route.get('/auth/user', jwtMiddleware, async function fetchUser (req, res) {
   return res.json({
     user: req.user,
   })
+})
+
+route.post('/auth/logout', jwtMiddleware, async function logout (req, res) {
+  return res.status(200).end()
 })
 
 export default route

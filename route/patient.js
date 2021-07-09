@@ -7,11 +7,7 @@ import { io } from '../module/server.js'
 
 const route = Router()
 
-route.get('/patient', async (req, res) => {
-
-})
-
-route.post('/patient', async (req, res) => {
+route.post('/patient', async function CreateOrUpdatePatient (req, res) {
   const formErrors = []
   if (!req.body.hospitalNumber) {
     formErrors.push('hospitalNumber.empty')
@@ -19,16 +15,22 @@ route.post('/patient', async (req, res) => {
     formErrors.push('hospitalNumber.empty')
   }
 
-  if (!req.body.name) {
-    formErrors.push('name.empty')
-  } else if (validator.isEmpty(req.body.name)) {
-    formErrors.push('name.empty')
+  if (req.body.bedNumber) {
+    if (validator.isEmpty(req.body.bedNumber)) {
+      formErrors.push('bedNumber.empty')
+    }
   }
 
-  if (!req.body.lastName) {
-    formErrors.push('lastName.empty')
-  } else if (validator.isEmpty(req.body.lastName)) {
-    formErrors.push('lastName.empty')
+  if (req.body.name) {
+    if (validator.isEmpty(req.body.name)) {
+      formErrors.push('name.empty')
+    }
+  }
+
+  if (req.body.lastName) {
+    if (validator.isEmpty(req.body.lastName)) {
+      formErrors.push('lastName.empty')
+    }
   }
 
   if (!req.body.triage) {
@@ -72,7 +74,7 @@ route.post('/patient', async (req, res) => {
   } else {
     // New patient
     const entry = parse(`${req.body.entryDate} ${req.body.entryTime}`, 'yyyy-MM-dd HH:mm:ss', new Date())
-    const stages = [{ stage: req.body.currentStage, start: entry, end: null }]
+    const stages = [{ stage: req.body.stage, start: entry, end: null }]
 
     const patient = await Patient.create({
       hospitalNumber: req.body.hospitalNumber,
@@ -93,6 +95,10 @@ route.post('/patient', async (req, res) => {
       success: true,
     })
   }
+})
+
+route.delete('/patient/:id', async function RemovePatient (req, res) {
+
 })
 
 export default route
