@@ -40,4 +40,7 @@ io.on('connect', async (socket) => {
 //   }, 5000)
 })
 
-startServer()
+if (process.env.NODE_ENV !== 'test') {
+  startServer()
+}
+export default app

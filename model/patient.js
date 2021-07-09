@@ -1,5 +1,8 @@
 import mongoose from 'mongoose'
 
+/**
+ * @enum {Number}
+ */
 export const PatientStage = {
   triage: 1,
   investigation: 2,

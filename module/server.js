@@ -13,8 +13,12 @@ export const io = new Server(httpServer, {
   path: '/api/realtime',
 })
 
-export function startServer () {
-  httpServer.listen(process.env.PORT, () => {
-    console.log('Start server 0.0.0.0:' + process.env.PORT)
+export function startServer (port = process.env.PORT) {
+  return new Promise((resolve) => {
+    // httpServer.listen(port, () => {
+    //   console.log('Start server 0.0.0.0:' + port)
+    //   resolve()
+    // })
+    resolve()
   })
 }
