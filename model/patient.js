@@ -32,7 +32,6 @@ const PatientSchema = mongoose.Schema({
   bedNumber: String,
   name: String,
   lastName: String,
-  ventilator: Boolean,
   triage: Number,
   currentStage: Number,
   stages: [PatientStageSchema],
