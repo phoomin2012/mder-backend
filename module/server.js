@@ -15,10 +15,10 @@ export const io = new Server(httpServer, {
 
 export function startServer (port = process.env.PORT) {
   return new Promise((resolve) => {
-    // httpServer.listen(port, () => {
-    //   console.log('Start server 0.0.0.0:' + port)
-    //   resolve()
-    // })
+    httpServer.listen(port, () => {
+      console.log('Start server 0.0.0.0:' + port)
+      resolve()
+    })
     resolve()
   })
 }
