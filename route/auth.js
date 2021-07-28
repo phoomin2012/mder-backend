@@ -18,6 +18,7 @@ route.post('/auth/login', async function login (req, res) {
 
   if (formErrors.length > 0) {
     return res.status(400).json({
+      success: false,
       error: {
         form: formErrors,
       },
@@ -30,6 +31,7 @@ route.post('/auth/login', async function login (req, res) {
 
   if (!user) {
     return res.status(400).json({
+      success: false,
       error: {
         form: ['password.invalid'],
       },
@@ -48,6 +50,7 @@ route.post('/auth/login', async function login (req, res) {
     })
   } else {
     return res.status(400).json({
+      success: false,
       error: {
         form: ['password.invalid'],
       },

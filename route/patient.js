@@ -79,6 +79,7 @@ route.post('/patient', async function CreateOrUpdatePatient (req, res) {
     patient.bedNumber = req.body.bedNumber
     patient.name = req.body.name
     patient.lastName = req.body.lastName
+    patient.ventilator = req.body.ventilator || false
     patient.triage = req.body.triage
 
     if (req.body.stage.toString() !== patient.currentStage.toString()) {
@@ -111,6 +112,7 @@ route.post('/patient', async function CreateOrUpdatePatient (req, res) {
       bedNumber: req.body.bedNumber,
       name: req.body.name,
       lastName: req.body.lastName,
+      ventilator: req.body.ventilator || false,
       triage: req.body.triage,
       currentStage: req.body.stage,
       stages: stages,
@@ -127,17 +129,21 @@ route.post('/patient', async function CreateOrUpdatePatient (req, res) {
 })
 
 route.delete('/patient/:id', async function RemovePatient (req, res) {
-  const patient = await Patient.findById(req.params.id).exec()
+  try {
+    const patient = await Patient.findById(req.params.id).exec()
 
-  if (patient) {
-    try {
-      await patient.remove()
-      io.emit('patient.remove', req.params.id)
-      return res.status(200).json({ success: true })
-    } catch (err) {
+    if (patient) {
+      try {
+        await patient.remove()
+        io.emit('patient.remove', req.params.id)
+        return res.status(200).json({ success: true })
+      } catch (err) {
+        return res.status(400).json({ success: false })
+      }
+    } else {
       return res.status(400).json({ success: false })
     }
-  } else {
+  } catch (err) {
     return res.status(400).json({ success: false })
   }
 })
