@@ -1,10 +1,13 @@
 import './module/mongoose.js'
 import { app, io, startServer } from './module/server.js'
-
+// Import middleware
 import socketAuthMiddleware from './middleware/socketAuth.js'
-
-import staffRoute from './route/staff.js'
+// Import route
 import authRoute from './route/auth.js'
+import staffRoute from './route/staff.js'
+import patientRoute from './route/patient.js'
+// Import socket event
+import onConnect from './socket/onConnect.js'
 
 // Express Middleware
 
@@ -14,11 +17,13 @@ io.use(socketAuthMiddleware)
 // Routes
 app.use('/api', authRoute)
 app.use('/api', staffRoute)
+app.use('/api', patientRoute)
 
 // Socket handle
-io.on('connect', (socket) => {
+//    On socket connect
+io.on('connect', async (socket) => {
   console.log('New socket:', socket.handshake.user)
-
+  onConnect(socket)
 //   setTimeout(() => {
 //     socket.emit('message', {
 //       event: [
@@ -35,4 +40,7 @@ io.on('connect', (socket) => {
 //   }, 5000)
 })
 
-startServer()
+if (process.env.NODE_ENV !== 'test') {
+  startServer()
+}
+export default app

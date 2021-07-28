@@ -5,9 +5,11 @@ mongoose.connect('mongodb://127.0.0.1:28018/mder', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }, (error) => {
-  if (error) {
-    console.log('🔴 Error:', error)
-  } else {
-    console.log('🟢 Connect to database.')
+  if (process.env.NODE_ENV !== 'test') {
+    if (error) {
+      console.log('🔴 Error:', error)
+    } else {
+      console.log('🟢 Connect to database.')
+    }
   }
 })
