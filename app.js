@@ -7,6 +7,7 @@ import authRoute from './route/auth.js'
 import staffRoute from './route/staff.js'
 import patientRoute from './route/patient.js'
 import checkInOutRoute from './route/check.js'
+import CountdownRoute from './route/countdown.js'
 // Import socket event
 import onConnect from './socket/onConnect.js'
 
@@ -20,6 +21,7 @@ app.use('/api', authRoute)
 app.use('/api', staffRoute)
 app.use('/api', patientRoute)
 app.use('/api', checkInOutRoute)
+app.use('/api', CountdownRoute)
 
 // Socket handle
 //    On socket connect
