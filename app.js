@@ -6,6 +6,7 @@ import socketAuthMiddleware from './middleware/socketAuth.js'
 import authRoute from './route/auth.js'
 import staffRoute from './route/staff.js'
 import patientRoute from './route/patient.js'
+import checkInOutRoute from './route/check.js'
 // Import socket event
 import onConnect from './socket/onConnect.js'
 
@@ -18,6 +19,7 @@ io.use(socketAuthMiddleware)
 app.use('/api', authRoute)
 app.use('/api', staffRoute)
 app.use('/api', patientRoute)
+app.use('/api', checkInOutRoute)
 
 // Socket handle
 //    On socket connect
