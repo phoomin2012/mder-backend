@@ -10,6 +10,7 @@ import checkInOutRoute from './route/check.js'
 import CountdownRoute from './route/countdown.js'
 // Import socket event
 import onConnect from './socket/onConnect.js'
+import onCountdownRemove from './socket/onCountdownRemove.js'
 
 // Express Middleware
 
@@ -28,20 +29,7 @@ app.use('/api', CountdownRoute)
 io.on('connect', async (socket) => {
   console.log('New socket:', socket.handshake.user)
   onConnect(socket)
-//   setTimeout(() => {
-//     socket.emit('message', {
-//       event: [
-//         {
-//           type: 'popup',
-//           message: {
-//             title: 'Test',
-//             text: 'ทดสอบๆ',
-//             icon: 'warning',
-//           },
-//         },
-//       ],
-//     })
-//   }, 5000)
+  onCountdownRemove(socket)
 })
 
 if (process.env.NODE_ENV !== 'test') {

@@ -20,6 +20,7 @@ route.post('/countdown/start', jwtMiddleware, async (req, res) => {
 
       await oldCounting.save()
       io.emit('countdown.start', oldCounting)
+
       return res.json({
         success: true,
       })
