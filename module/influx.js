@@ -1,8 +1,8 @@
 import { InfluxDB } from '@influxdata/influxdb-client'
 
-const token = 'e37F3iwYI8amMjZqR2F0bMdBhI8qCyMj-2OJJ2ftEapfnXjGURC9oh2JPco5MjHMJ7W6Fai1wF2GsiQcnxoGsA=='
+const token = 'xqMcanwN1tSLj-cGMYG1jyXl20UsZV1ptjloAB6r7GmYzmkSoKRCLWdVu1CZPtKXgauq9UN4nGoOQIPzpdqZ_A=='
 export const org = 'mder'
-export const bucket = 'statistic'
+export const bucket = 'statistics'
 
 const client = new InfluxDB({ url: 'http://localhost:7076', token: token })
 
