@@ -4,6 +4,7 @@ import { io } from '../module/server.js'
 
 import CheckIn from '../model/checkIn.js'
 import Staff, { StaffRole } from '../model/staff.js'
+import Statistic from '../model/statistic.js'
 
 const route = Router()
 
@@ -43,6 +44,16 @@ route.post('/check/in', jwtMiddleware, async (req, res) => {
       })
     }
 
+    // Save the statistic
+    const statistic = await Statistic.findOne()
+    if (staff.role === StaffRole.physician) {
+      statistic.currentPhysician += 1
+    } else if (staff.role === StaffRole.nurse) {
+      statistic.currentNurse += 1
+    }
+    statistic.save()
+
+    // Make check in
     await CheckIn.create({
       userId: staff._id,
       checkIn: new Date(),
@@ -79,6 +90,16 @@ route.post('/check/out', jwtMiddleware, async (req, res) => {
       })
     }
 
+    // Save the statistic
+    const statistic = await Statistic.findOne()
+    if (staff.role === StaffRole.physician) {
+      statistic.currentPhysician -= 1
+    } else if (staff.role === StaffRole.nurse) {
+      statistic.currentNurse -= 1
+    }
+    statistic.save()
+
+    // Make check out
     await check.remove()
     io.emit('checkOut', { role: staff.role })
 

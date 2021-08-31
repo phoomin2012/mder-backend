@@ -4,6 +4,7 @@ import { parse } from 'date-fns'
 
 import Patient, { PatientStage } from '../model/patient.js'
 import { io } from '../module/server.js'
+import Statistic from '../model/statistic.js'
 
 const route = Router()
 
@@ -119,6 +120,11 @@ route.post('/patient', async function CreateOrUpdatePatient (req, res) {
       entry,
     })
 
+    // Save the statistic
+    const statistic = await Statistic.findOne()
+    statistic.currentPatient += 1
+    statistic.save()
+
     // Broadcast patient information
     io.emit('patient.add', patient)
 
@@ -134,6 +140,11 @@ route.delete('/patient/:id', async function RemovePatient (req, res) {
 
     if (patient) {
       try {
+        // Save the statistic
+        const statistic = await Statistic.findOne()
+        statistic.currentPatient -= 1
+        statistic.save()
+
         await patient.remove()
         io.emit('patient.remove', req.params.id)
         return res.status(200).json({ success: true })
