@@ -12,6 +12,7 @@ async function start () {
       role: StaffRole.physician,
     })
     console.log('Mock data success')
+    process.exit()
   } catch (e) {
     console.log('Error mock data:', e)
   }

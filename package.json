@@ -5,7 +5,9 @@
   "author": "phoomin009 <phoomin009@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.17.0",
     "bcrypt": "^5.0.1",
+    "cron": "^1.8.2",
     "date-fns": "^2.22.1",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
@@ -16,7 +18,8 @@
     "validator": "^13.6.0"
   },
   "scripts": {
-    "start": "nodemon app --max_old_space_size=2048",
+    "start": "nodemon app",
+    "mock": "node _mock",
     "test": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles"
   },
   "devDependencies": {
