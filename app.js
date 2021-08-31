@@ -8,6 +8,7 @@ import staffRoute from './route/staff.js'
 import patientRoute from './route/patient.js'
 import checkInOutRoute from './route/check.js'
 import CountdownRoute from './route/countdown.js'
+import HistoryRoute from './route/history.js'
 // Import socket event
 import onConnect from './socket/onConnect.js'
 import onCountdownRemove from './socket/onCountdownRemove.js'
@@ -23,11 +24,12 @@ app.use('/api', staffRoute)
 app.use('/api', patientRoute)
 app.use('/api', checkInOutRoute)
 app.use('/api', CountdownRoute)
+app.use('/api', HistoryRoute)
 
 // Socket handle
 //    On socket connect
 io.on('connect', async (socket) => {
-  console.log('New socket:', socket.handshake.user)
+  console.log(`👨 New socket ➡️ ${socket.handshake.user.name} ${socket.handshake.user.lastName} (${socket.handshake.user.role})`)
   onConnect(socket)
   onCountdownRemove(socket)
 })
