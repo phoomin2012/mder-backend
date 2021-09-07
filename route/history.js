@@ -69,6 +69,10 @@ route.get('/history', jwtMiddleware, async (req, res) => {
             3: 0,
             4: 0,
             5: 0,
+            60: 0,
+            61: 0,
+            62: 0,
+            63: 0,
           },
         }
       }

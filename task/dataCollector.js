@@ -43,6 +43,10 @@ const job = new CronJob('*/5 * * * * *', async () => {
       3: 0,
       4: 0,
       5: 0,
+      60: 0,
+      61: 0,
+      62: 0,
+      63: 0,
     }
     const times = {
       1: 0,
@@ -50,13 +54,17 @@ const job = new CronJob('*/5 * * * * *', async () => {
       3: 0,
       4: 0,
       5: 0,
+      60: 0,
+      61: 0,
+      62: 0,
+      63: 0,
     }
 
     for (const patient of patients) {
       const lastStage = patient.stages[patient.stages.length - 1]
 
-      people[patient.triage] += 1
-      times[patient.triage] += differenceInSeconds(new Date(), lastStage.start)
+      people[lastStage.stage] += 1
+      times[lastStage.stage] += differenceInSeconds(new Date(), lastStage.start)
     }
 
     const point = new Point('timeInterval')
@@ -65,6 +73,10 @@ const job = new CronJob('*/5 * * * * *', async () => {
     point.intField('3', people[3] > 0 ? times[3] / people[3] : 0)
     point.intField('4', people[4] > 0 ? times[4] / people[4] : 0)
     point.intField('5', people[5] > 0 ? times[5] / people[5] : 0)
+    point.intField('60', people[60] > 0 ? times[60] / people[60] : 0)
+    point.intField('61', people[61] > 0 ? times[61] / people[61] : 0)
+    point.intField('62', people[62] > 0 ? times[62] / people[62] : 0)
+    point.intField('63', people[63] > 0 ? times[63] / people[63] : 0)
 
     writeApi.writePoint(point)
   }
