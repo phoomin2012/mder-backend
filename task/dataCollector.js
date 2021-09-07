@@ -56,7 +56,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
       const lastStage = patient.stages[patient.stages.length - 1]
 
       people[patient.triage] += 1
-      times[patient.triage] += differenceInSeconds(lastStage.start, new Date())
+      times[patient.triage] += differenceInSeconds(new Date(), lastStage.start)
     }
 
     const point = new Point('timeInterval')
@@ -87,7 +87,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
 
     for (const patient of patients) {
       peoples += 1
-      times += differenceInSeconds(patient.entry, new Date())
+      times += differenceInSeconds(new Date(), patient.entry)
     }
 
     const point = new Point('timeStay')
@@ -97,9 +97,10 @@ const job = new CronJob('*/5 * * * * *', async () => {
   }
 
   // Chart 5 => overcrowding score
-  if (patients && statistic) {
-    // ....
-  }
+  // if (patients && statistic) {
+  //   // ....
+
+  // }
 
   writeApi.close().then(() => {
     console.log(`\tFINISH in ${Date.now() - __start.getTime()}ms`)
