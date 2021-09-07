@@ -28,7 +28,7 @@ route.get('/history', jwtMiddleware, async (req, res) => {
       if (typeof mappedData[time] === 'undefined') {
         mappedData[time] = {
           time: time,
-          triage: {
+          triages: {
             1: 0,
             2: 0,
             3: 0,
@@ -37,7 +37,7 @@ route.get('/history', jwtMiddleware, async (req, res) => {
           },
         }
       }
-      mappedData[time].triage[row._field] = row._value
+      mappedData[time].triages[row._field] = row._value
     }
 
     jsonResponse.chart1 = Object.values(mappedData)
@@ -63,7 +63,7 @@ route.get('/history', jwtMiddleware, async (req, res) => {
       if (typeof mappedData[time] === 'undefined') {
         mappedData[time] = {
           time: time,
-          triage: {
+          stages: {
             1: 0,
             2: 0,
             3: 0,
@@ -76,7 +76,7 @@ route.get('/history', jwtMiddleware, async (req, res) => {
           },
         }
       }
-      mappedData[time].triage[row._field] = row._value
+      mappedData[time].stages[row._field] = row._value
     }
 
     jsonResponse.chart2 = Object.values(mappedData)
