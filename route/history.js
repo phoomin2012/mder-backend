@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { jwtMiddleware } from '../middleware/passport.js'
 import client, { org, bucket } from '../module/influx.js'
-import { parseJSON, getTime } from 'date-fns'
+import { parseJSON, getTime, differenceInSeconds } from 'date-fns'
 
 const route = Router()
 
@@ -9,18 +9,34 @@ route.get('/history', jwtMiddleware, async (req, res) => {
   const queryApi = client.getQueryApi(org)
   const jsonResponse = {}
 
+  const { start, end } = req.query
+  // start = parseJSON(start)
+  // end = parseJSON(end)
+
   const _start = Date.now()
+  const range = `range(start: ${start}, stop: ${end})`
+  let every = '5s'
+  const duration = differenceInSeconds(parseJSON(end), parseJSON(start))
+  if (duration > 3600 * 24 * 30) {
+    every = '1d'
+  } else if (duration > 3600 * 24) {
+    every = '1h'
+  } else if (duration > 3600) {
+    every = '1m'
+  }
 
   // Chart 1 => patient triage level
   try {
     const query = `from(bucket: "${bucket}")
-      |> range(start: -1h)
+      |> ${range}
       |> filter(fn: (r) => r["_measurement"] == "triage")
-      |> aggregateWindow(every: 5s, fn: mean, createEmpty: false)
+      |> aggregateWindow(every: ${every}, fn: mean, createEmpty: true)
       |> yield(name: "mean")
-      `
+    `
+    let __start = Date.now()
     const rawData = await queryApi.collectRows(query)
-    console.log('\nCollect ROWS SUCCESS')
+    console.log(`[API] Query chart 1 SUCCESS in ${Date.now() - __start}ms`)
+    __start = Date.now()
 
     const mappedData = {}
     for (const row of rawData) {
@@ -41,21 +57,24 @@ route.get('/history', jwtMiddleware, async (req, res) => {
     }
 
     jsonResponse.chart1 = Object.values(mappedData)
+    console.log(`[API] Mapping chart 1 SUCCESS in ${Date.now() - __start}ms`)
   } catch (error) {
     console.error(error)
-    console.log('\nCollect ROWS ERROR')
+    console.log('[API] Query chart 1 ERROR')
   }
 
   // Chart 2 => average time interval
   try {
     const query = `from(bucket: "${bucket}")
-      |> range(start: -1h)
+      |> ${range}
       |> filter(fn: (r) => r["_measurement"] == "timeInterval")
-      |> aggregateWindow(every: 5s, fn: mean, createEmpty: false)
+      |> aggregateWindow(every: ${every}, fn: mean, createEmpty: true)
       |> yield(name: "mean")
-      `
+    `
+    let __start = Date.now()
     const rawData = await queryApi.collectRows(query)
-    console.log('\nCollect ROWS SUCCESS')
+    console.log(`[API] Query chart 2 SUCCESS in ${Date.now() - __start}ms`)
+    __start = Date.now()
 
     const mappedData = {}
     for (const row of rawData) {
@@ -80,21 +99,24 @@ route.get('/history', jwtMiddleware, async (req, res) => {
     }
 
     jsonResponse.chart2 = Object.values(mappedData)
+    console.log(`[API] Mapping chart 2 SUCCESS in ${Date.now() - __start}ms`)
   } catch (error) {
     console.error(error)
-    console.log('\nCollect ROWS ERROR')
+    console.log('[API] Query chart 2 ERROR')
   }
 
   // Chart 3 => amount of staff and patient
   try {
     const query = `from(bucket: "${bucket}")
-      |> range(start: -1h)
+      |> ${range}
       |> filter(fn: (r) => r["_measurement"] == "population")
-      |> aggregateWindow(every: 5s, fn: mean, createEmpty: false)
+      |> aggregateWindow(every: ${every}, fn: mean, createEmpty: true)
       |> yield(name: "mean")
-      `
+    `
+    let __start = Date.now()
     const rawData = await queryApi.collectRows(query)
-    console.log('\nCollect ROWS SUCCESS')
+    console.log(`[API] Query chart 3 SUCCESS in ${Date.now() - __start}ms`)
+    __start = Date.now()
 
     const mappedData = {}
     for (const row of rawData) {
@@ -111,21 +133,24 @@ route.get('/history', jwtMiddleware, async (req, res) => {
     }
 
     jsonResponse.chart3 = Object.values(mappedData)
+    console.log(`[API] Mapping chart 3 SUCCESS in ${Date.now() - __start}ms`)
   } catch (error) {
     console.error(error)
-    console.log('\nCollect ROWS ERROR')
+    console.log('[API] Query chart 3 ERROR')
   }
 
   // Chart 4 => average length of stay
   try {
     const query = `from(bucket: "${bucket}")
-    |> range(start: -1h)
-    |> filter(fn: (r) => r["_measurement"] == "timeStay")
-    |> aggregateWindow(every: 5s, fn: mean, createEmpty: false)
-    |> yield(name: "mean")
+      |> ${range}
+      |> filter(fn: (r) => r["_measurement"] == "timeStay")
+      |> aggregateWindow(every: ${every}, fn: mean, createEmpty: true)
+      |> yield(name: "mean")
     `
+    let __start = Date.now()
     const rawData = await queryApi.collectRows(query)
-    console.log('\nCollect ROWS SUCCESS')
+    console.log(`[API] Query chart 4 SUCCESS in ${Date.now() - __start}ms`)
+    __start = Date.now()
 
     const mappedData = {}
     for (const row of rawData) {
@@ -140,9 +165,10 @@ route.get('/history', jwtMiddleware, async (req, res) => {
     }
 
     jsonResponse.chart4 = Object.values(mappedData)
+    console.log(`[API] Mapping chart 4 SUCCESS in ${Date.now() - __start}ms`)
   } catch (error) {
     console.error(error)
-    console.log('\nCollect ROWS ERROR')
+    console.log('[API] Query chart 4 ERROR')
   }
 
   // Chart 5 => overcrowding score
