@@ -9,12 +9,15 @@ route.get('/history', jwtMiddleware, async (req, res) => {
   const queryApi = client.getQueryApi(org)
   const jsonResponse = {}
 
-  const { start, end } = req.query
+  const { start, end, mode } = req.query
   // start = parseJSON(start)
   // end = parseJSON(end)
 
   const _start = Date.now()
-  const range = `range(start: ${start}, stop: ${end})`
+  let range = `range(start: ${start})`
+  if (mode === 'custom') {
+    range = `range(start: ${start}, stop: ${end})`
+  }
   let every = '5s'
   const duration = differenceInSeconds(parseJSON(end), parseJSON(start))
   if (duration > 3600 * 24 * 30) {
