@@ -3,7 +3,7 @@ import { differenceInSeconds } from 'date-fns'
 import { Point } from '@influxdata/influxdb-client'
 import client, { org, bucket } from '../module/influx.js'
 import StatisticModel from '../model/statistic.js'
-import PatientModel from '../model/patient.js'
+import PatientModel, { PatientStage } from '../model/patient.js'
 
 const job = new CronJob('*/5 * * * * *', async () => {
   const __start = new Date()
@@ -109,10 +109,22 @@ const job = new CronJob('*/5 * * * * *', async () => {
   }
 
   // Chart 5 => overcrowding score
-  // if (patients && statistic) {
-  //   // ....
+  if (patients && statistic) {
+    // NEDOCS
+    const currentPatient = patients.length
+    const waitForAdmitPatient = patients.filter(patient => patient.currentStage === PatientStage.triage).length
+    const ventilatorPatient = patients.filter(patient => patient.ventilator).length
+    const LOSHr = patients.reduce((sum, patient) => sum + differenceInSeconds(new Date(), patient.entry), 0) / 3600
+    const lastAdmitHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? last : patient).entry) / 3600
 
-  // }
+    const nedocs = overcrowdNEDOCS(currentPatient, waitForAdmitPatient, ventilatorPatient, LOSHr, lastAdmitHr)
+
+    console.log('NEDOCS', nedocs)
+    // const point = new Point('overcrowd')
+    // point.intField('nedocs', nedocs)
+
+    // writeApi.writePoint(point)
+  }
 
   writeApi.close().then(() => {
     console.log(`\tFINISH in ${Date.now() - __start.getTime()}ms`)
@@ -124,4 +136,12 @@ const job = new CronJob('*/5 * * * * *', async () => {
 
 export function startTask () {
   job.start()
+}
+
+export function overcrowdNEDOCS (currentPatient, waitForAdmitPatient, ventilatorPatient, LOSHr, lastAdmitHr, ERBeds = 6, hosBeds = 1000) {
+  return 85.8 * (currentPatient / ERBeds) +
+      600 * (waitForAdmitPatient / hosBeds) +
+      13.4 * ventilatorPatient +
+      0.93 * LOSHr +
+      5.64 * lastAdmitHr - 20
 }
