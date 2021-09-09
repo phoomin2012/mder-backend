@@ -20,6 +20,7 @@ const PatientStageSchema = mongoose.Schema({
   start: Date,
   end: Date,
 })
+
 PatientStageSchema.set('toJSON', {
   transform (doc, ret, opt) {
     delete ret._id
@@ -40,6 +41,12 @@ const PatientSchema = mongoose.Schema({
   entry: Date,
   exit: Date,
 })
+
+PatientSchema.statics.getNonDisposition = function () {
+  return this.find({
+    currentStage: [1, 2, 3, 4, 5, 60],
+  })
+}
 
 PatientSchema.set('toJSON', {
   transform (doc, ret, opt) {

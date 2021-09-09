@@ -11,7 +11,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
   const writeApi = client.getWriteApi(org, bucket)
 
   // Chart 1 => patient triage level
-  const patients = await PatientModel.find()
+  const patients = await PatientModel.getNonDisposition()
   if (patients) {
     const levels = {
       1: 0,
@@ -119,9 +119,17 @@ const job = new CronJob('*/5 * * * * *', async () => {
 
     const nedocs = overcrowdNEDOCS(currentPatient, waitForAdmitPatient, ventilatorPatient, LOSHr, lastAdmitHr)
 
+    const lv1Patient = patients.filter(patient => patient.triage === 1).length
+    const lv2Patient = patients.filter(patient => patient.triage === 2).length
+    const lv3Patient = patients.filter(patient => patient.triage === 3).length
+    const lv4Patient = patients.filter(patient => patient.triage === 4).length
+    const lv5Patient = patients.filter(patient => patient.triage === 5).length
+    const currentStaff = statistic.currentPhysician + statistic.currentNurse
+    const edwin = overcrowdEDWIN(currentPatient, lv1Patient, lv2Patient, lv3Patient, lv4Patient, lv5Patient, currentStaff)
+
     const point = new Point('overcrowd')
-    point.intField('nedocs', nedocs)
-    point.intField('edwin', 0)
+    point.floatField('nedocs', nedocs)
+    point.floatField('edwin', edwin)
 
     writeApi.writePoint(point)
   }
@@ -144,4 +152,8 @@ export function overcrowdNEDOCS (currentPatient, waitForAdmitPatient, ventilator
       13.4 * ventilatorPatient +
       0.93 * LOSHr +
       5.64 * lastAdmitHr - 20
+}
+
+export function overcrowdEDWIN (currentPatient, lv1Patient, lv2Patient, lv3Patient, lv4Patient, lv5Patient, currentStaff, EDBeds = 6) {
+  return ((lv5Patient * 1) + (lv4Patient * 2) + (lv3Patient * 3) + (lv2Patient * 4) + (lv1Patient * 5)) / ((currentStaff === 0 ? 0.01 : currentStaff) * (EDBeds - currentPatient))
 }

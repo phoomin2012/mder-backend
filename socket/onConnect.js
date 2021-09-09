@@ -4,9 +4,9 @@ import Countdown from '../model/countdown.js'
 import Statistic from '../model/statistic.js'
 
 export default async function onConnect (socket) {
-  const patients = await Patient.find().exec()
+  const patients = await Patient.getNonDisposition()
   const summaryCheckIn = await CheckIn.getSummary()
-  const countdowns = await Countdown.find().exec()
+  const countdowns = await Countdown.find()
 
   const countStatistic = await Statistic.countDocuments()
   if (countStatistic === 0) {
