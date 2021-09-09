@@ -192,6 +192,37 @@ route.get('/history', jwtMiddleware, async (req, res) => {
   }
 
   // Chart 5 => overcrowding score
+  try {
+    const query = `from(bucket: "${bucket}")
+      |> ${range}
+      |> filter(fn: (r) => r["_measurement"] == "overcrowd")
+      |> aggregateWindow(every: ${every}, fn: mean, createEmpty: true)
+      |> yield(name: "mean")
+    `
+    let __start = Date.now()
+    const rawData = await queryApi.collectRows(query)
+    console.log(`[API] Query chart 5 SUCCESS in ${Date.now() - __start}ms`)
+    __start = Date.now()
+
+    const mappedData = {}
+    for (const row of rawData) {
+      const time = getTime(parseJSON(row._time))
+      if (typeof mappedData[time] === 'undefined') {
+        mappedData[time] = {
+          time: time,
+          nedocs: 0,
+          edwin: 0,
+        }
+      }
+      mappedData[time][row._field] += row._value
+    }
+
+    jsonResponse.chart5 = Object.values(mappedData)
+    console.log(`[API] Mapping chart 5 SUCCESS in ${Date.now() - __start}ms`)
+  } catch (error) {
+    console.error(error)
+    console.log('[API] Query chart 5 ERROR')
+  }
 
   jsonResponse.finishIn = Date.now() - _start
   return res.json(jsonResponse)

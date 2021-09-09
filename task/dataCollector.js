@@ -114,16 +114,16 @@ const job = new CronJob('*/5 * * * * *', async () => {
     const currentPatient = patients.length
     const waitForAdmitPatient = patients.filter(patient => patient.currentStage === PatientStage.triage).length
     const ventilatorPatient = patients.filter(patient => patient.ventilator).length
-    const LOSHr = patients.reduce((sum, patient) => sum + differenceInSeconds(new Date(), patient.entry), 0) / 3600
-    const lastAdmitHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? last : patient).entry) / 3600
+    const LOSHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
+    const lastAdmitHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
 
     const nedocs = overcrowdNEDOCS(currentPatient, waitForAdmitPatient, ventilatorPatient, LOSHr, lastAdmitHr)
 
-    console.log('NEDOCS', nedocs)
-    // const point = new Point('overcrowd')
-    // point.intField('nedocs', nedocs)
+    const point = new Point('overcrowd')
+    point.intField('nedocs', nedocs)
+    point.intField('edwin', 0)
 
-    // writeApi.writePoint(point)
+    writeApi.writePoint(point)
   }
 
   writeApi.close().then(() => {
