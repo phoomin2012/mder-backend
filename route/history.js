@@ -15,17 +15,34 @@ route.get('/history', jwtMiddleware, async (req, res) => {
 
   const _start = Date.now()
   let range = `range(start: ${start})`
+  let every = '5s'
   if (mode === 'custom') {
     range = `range(start: ${start}, stop: ${end})`
-  }
-  let every = '5s'
-  const duration = differenceInSeconds(parseJSON(end), parseJSON(start))
-  if (duration > 3600 * 24 * 30) {
-    every = '1d'
-  } else if (duration > 3600 * 24) {
-    every = '1h'
-  } else if (duration > 3600) {
-    every = '1m'
+    const duration = differenceInSeconds(parseJSON(end), parseJSON(start))
+    if (duration > 3600 * 24 * 30) {
+      every = '1d'
+    } else if (duration > 3600 * 24) {
+      every = '1h'
+    } else if (duration > 3600) {
+      every = '1m'
+    }
+  } else if (mode === 'past') {
+    switch (start) {
+      case '-5m':
+      case '-15m':
+      case '-30m':
+      case '-1h':
+        every = '5s'; break
+      case '-3h':
+      case '-6h':
+      case '-12h':
+      case '-24h':
+        every = '1m'; break
+      case '-2d':
+      case '-7d':
+      case '-30d':
+        every = '1h'; break
+    }
   }
 
   // Chart 1 => patient triage level
