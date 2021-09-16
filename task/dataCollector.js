@@ -103,7 +103,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
     }
 
     const point = new Point('timeStay')
-    point.intField('all', times / peoples)
+    point.intField('all', peoples === 0 ? 0 : times / peoples)
 
     writeApi.writePoint(point)
   }
@@ -111,11 +111,14 @@ const job = new CronJob('*/5 * * * * *', async () => {
   // Chart 5 => overcrowding score
   if (patients && statistic) {
     // NEDOCS
+    let LOSHr = 0; let lastAdmitHr = 0
     const currentPatient = patients.length
     const waitForAdmitPatient = patients.filter(patient => patient.currentStage === PatientStage.triage).length
     const ventilatorPatient = patients.filter(patient => patient.ventilator).length
-    const LOSHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
-    const lastAdmitHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
+    if (patients.length > 0) {
+      LOSHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
+      lastAdmitHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
+    }
 
     const nedocs = overcrowdNEDOCS(currentPatient, waitForAdmitPatient, ventilatorPatient, LOSHr, lastAdmitHr)
 
@@ -128,7 +131,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
     const edwin = overcrowdEDWIN(currentPatient, lv1Patient, lv2Patient, lv3Patient, lv4Patient, lv5Patient, currentStaff)
 
     const point = new Point('overcrowd')
-    point.floatField('nedocs', nedocs)
+    point.floatField('nedocs', Math.max(0, nedocs))
     point.floatField('edwin', edwin)
 
     writeApi.writePoint(point)
