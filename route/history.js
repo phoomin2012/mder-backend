@@ -5,6 +5,48 @@ import { parseJSON, getTime, differenceInSeconds } from 'date-fns'
 
 const route = Router()
 
+route.get('/history/dashboard', jwtMiddleware, async (req, res) => {
+  const queryApi = client.getQueryApi(org)
+  const _start = Date.now()
+
+  const jsonResponse = {}
+  try {
+    const query = `from(bucket: "${bucket}")
+      |> range(start: -24h)
+      |> filter(fn: (r) => r["_measurement"] == "population")
+      |> aggregateWindow(every: 1h, fn: mean, createEmpty: true)
+      |> yield(name: "mean")
+    `
+    let __start = Date.now()
+    const rawData = await queryApi.collectRows(query)
+    console.log(`[API] Query chart SUCCESS in ${Date.now() - __start}ms`)
+    __start = Date.now()
+
+    const mappedData = {}
+    for (const row of rawData) {
+      const time = getTime(parseJSON(row._time))
+      if (typeof mappedData[time] === 'undefined') {
+        mappedData[time] = {
+          time: time,
+          physician: 0,
+          nurse: 0,
+          patient: 0,
+        }
+      }
+      mappedData[time][row._field] = row._value
+    }
+
+    jsonResponse.population = Object.values(mappedData)
+    console.log(`[API] Mapping chart SUCCESS in ${Date.now() - __start}ms`)
+  } catch (error) {
+    console.error(error)
+    console.log('[API] Query chart ERROR')
+  }
+
+  jsonResponse.finishIn = Date.now() - _start
+  return res.json(jsonResponse)
+})
+
 route.get('/history', jwtMiddleware, async (req, res) => {
   const queryApi = client.getQueryApi(org)
   const jsonResponse = {}
