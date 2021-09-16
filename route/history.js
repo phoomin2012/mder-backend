@@ -5,7 +5,7 @@ import { parseJSON, getTime, differenceInSeconds } from 'date-fns'
 
 const route = Router()
 
-route.get('/history/dashboard', jwtMiddleware, async (req, res) => {
+route.get('/history/dashboard', jwtMiddleware, async function HistoryDashboard (req, res) {
   const queryApi = client.getQueryApi(org)
   const _start = Date.now()
 
@@ -47,7 +47,7 @@ route.get('/history/dashboard', jwtMiddleware, async (req, res) => {
   return res.json(jsonResponse)
 })
 
-route.get('/history', jwtMiddleware, async (req, res) => {
+route.get('/history', jwtMiddleware, async function HistoryFull (req, res) {
   const queryApi = client.getQueryApi(org)
   const jsonResponse = {}
 

@@ -8,7 +8,7 @@ import Statistic from '../model/statistic.js'
 
 const route = Router()
 
-route.get('/check', jwtMiddleware, async (req, res) => {
+route.get('/check', jwtMiddleware, async function GetCheckIn (req, res) {
   const checks = await CheckIn.find().exec()
 
   let physician = 0
@@ -29,7 +29,7 @@ route.get('/check', jwtMiddleware, async (req, res) => {
   })
 })
 
-route.post('/check/in', jwtMiddleware, async (req, res) => {
+route.post('/check/in', jwtMiddleware, async function CheckIn (req, res) {
   const staff = await Staff.findOne({
     username: req.body.username,
   })
@@ -74,7 +74,7 @@ route.post('/check/in', jwtMiddleware, async (req, res) => {
   }
 })
 
-route.post('/check/out', jwtMiddleware, async (req, res) => {
+route.post('/check/out', jwtMiddleware, async function CheckOut (req, res) {
   const staff = await Staff.findOne({
     username: req.body.username,
   })

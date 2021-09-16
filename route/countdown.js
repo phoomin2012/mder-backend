@@ -8,7 +8,7 @@ import { addSeconds } from 'date-fns'
 
 const route = Router()
 
-route.post('/countdown/start', jwtMiddleware, async (req, res) => {
+route.post('/countdown/start', jwtMiddleware, async function CountdownStart (req, res) {
   const patient = await Patient.findById(req.body.patient)
 
   if (patient) {
@@ -51,7 +51,7 @@ route.post('/countdown/start', jwtMiddleware, async (req, res) => {
   }
 })
 
-route.post('/countdown/stop', jwtMiddleware, async (req, res) => {
+route.post('/countdown/stop', jwtMiddleware, async function CountdownStop (req, res) {
   const counting = await Countdown.findById(req.body.id)
 
   if (counting) {
