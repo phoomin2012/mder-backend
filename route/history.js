@@ -8,14 +8,18 @@ const route = Router()
 route.get('/history/dashboard', jwtMiddleware, async function HistoryDashboard (req, res) {
   const queryApi = client.getQueryApi(org)
   const _start = Date.now()
+  const stop = new Date()
+  stop.setMilliseconds(0)
+  stop.setSeconds(0)
+  stop.setMinutes(0)
 
   const jsonResponse = {}
   try {
     const query = `from(bucket: "${bucket}")
-      |> range(start: -24h)
+      |> range(start: -24h, stop: ${stop.toJSON()} )
       |> filter(fn: (r) => r["_measurement"] == "population")
-      |> aggregateWindow(every: 1h, fn: mean, createEmpty: true)
-      |> yield(name: "mean")
+      |> aggregateWindow(every: 1h, fn: max, createEmpty: true)
+      |> yield(name: "max")
     `
     let __start = Date.now()
     const rawData = await queryApi.collectRows(query)
