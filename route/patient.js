@@ -5,6 +5,7 @@ import { parse } from 'date-fns'
 import Patient, { PatientStage } from '../model/patient.js'
 import { io } from '../module/server.js'
 import Statistic from '../model/statistic.js'
+import Countdown from '../model/countdown.js'
 
 const route = Router()
 
@@ -144,6 +145,17 @@ route.delete('/patient/:id', async function RemovePatient (req, res) {
         const statistic = await Statistic.findOne()
         statistic.currentPatient -= 1
         statistic.save()
+
+        const countings = await Countdown.find({
+          patientId: req.params.id,
+        })
+        for (const counting of countings) {
+          await counting.remove()
+        }
+        if (countings.length > 0) {
+          const countdowns = await Countdown.find()
+          io.emit('countdown.all', countdowns)
+        }
 
         await patient.remove()
         io.emit('patient.remove', req.params.id)
