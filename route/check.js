@@ -2,14 +2,14 @@ import { Router } from 'express'
 import { jwtMiddleware } from '../middleware/passport.js'
 import { io } from '../module/server.js'
 
-import CheckIn from '../model/checkIn.js'
+import CheckInOut from '../model/checkIn.js'
 import Staff, { StaffRole } from '../model/staff.js'
 import Statistic from '../model/statistic.js'
 
 const route = Router()
 
 route.get('/check', jwtMiddleware, async function GetCheckIn (req, res) {
-  const checks = await CheckIn.find().exec()
+  const checks = await CheckInOut.find().exec()
 
   let physician = 0
   let nurse = 0
@@ -35,7 +35,7 @@ route.post('/check/in', jwtMiddleware, async function CheckIn (req, res) {
   })
 
   if (staff) {
-    if (await CheckIn.findOne({ userId: staff._id })) {
+    if (await CheckInOut.findOne({ userId: staff._id })) {
       return res.json({
         success: false,
         error: {
@@ -54,7 +54,7 @@ route.post('/check/in', jwtMiddleware, async function CheckIn (req, res) {
     statistic.save()
 
     // Make check in
-    await CheckIn.create({
+    await CheckInOut.create({
       userId: staff._id,
       checkIn: new Date(),
     })
@@ -80,7 +80,7 @@ route.post('/check/out', jwtMiddleware, async function CheckOut (req, res) {
   })
 
   if (staff) {
-    const check = await CheckIn.findOne({ userId: staff._id })
+    const check = await CheckInOut.findOne({ userId: staff._id })
     if (!check) {
       return res.json({
         success: false,
