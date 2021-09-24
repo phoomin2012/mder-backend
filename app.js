@@ -1,4 +1,4 @@
-import './module/mongoose.js'
+import connectDB from './module/mongoose.js'
 import { app, io, startServer } from './module/server.js'
 // Import middleware
 import socketAuthMiddleware from './middleware/socketAuth.js'
@@ -12,6 +12,7 @@ import HistoryRoute from './route/history.js'
 // Import socket event
 import onConnect from './socket/onConnect.js'
 import onCountdownRemove from './socket/onCountdownRemove.js'
+import { startTask as startCollectorTask } from './task/dataCollector.js'
 
 // Express Middleware
 
@@ -34,7 +35,25 @@ io.on('connect', async (socket) => {
   onCountdownRemove(socket)
 })
 
-if (process.env.NODE_ENV !== 'test') {
-  startServer()
+const [,, mode] = process.argv
+
+async function run () {
+  await connectDB()
+  if (mode === 'mock') {
+    (await import('./task/simulation.js')).startTask()
+  } else {
+    startCollectorTask()
+    await startServer()
+  }
 }
+async function forTest () {
+  await connectDB()
+}
+
+if (process.env.NODE_ENV !== 'test') {
+  run()
+} else {
+  forTest()
+}
+
 export default app

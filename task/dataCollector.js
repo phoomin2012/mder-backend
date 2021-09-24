@@ -5,7 +5,7 @@ import client, { org, bucket } from '../module/influx.js'
 import StatisticModel from '../model/statistic.js'
 import PatientModel, { PatientStage } from '../model/patient.js'
 
-const job = new CronJob('*/5 * * * * *', async () => {
+export async function collectStatisticToInflux (timestamp = new Date()) {
   const __start = new Date()
   console.log('🤖 Start collect data to InfluxDB 📈📉')
   const writeApi = client.getWriteApi(org, bucket)
@@ -31,6 +31,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
     point.intField('3', levels[3])
     point.intField('4', levels[4])
     point.intField('5', levels[5])
+    point.timestamp(timestamp)
 
     writeApi.writePoint(point)
   }
@@ -77,6 +78,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
     point.intField('61', people[61] > 0 ? times[61] / people[61] : 0)
     point.intField('62', people[62] > 0 ? times[62] / people[62] : 0)
     point.intField('63', people[63] > 0 ? times[63] / people[63] : 0)
+    point.timestamp(timestamp)
 
     writeApi.writePoint(point)
   }
@@ -88,6 +90,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
     point.intField('physician', statistic.currentPhysician)
     point.intField('nurse', statistic.currentNurse)
     point.intField('patient', statistic.currentPatient)
+    point.timestamp(timestamp)
 
     writeApi.writePoint(point)
   }
@@ -104,6 +107,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
 
     const point = new Point('timeStay')
     point.intField('all', peoples === 0 ? 0 : times / peoples)
+    point.timestamp(timestamp)
 
     writeApi.writePoint(point)
   }
@@ -133,6 +137,7 @@ const job = new CronJob('*/5 * * * * *', async () => {
     const point = new Point('overcrowd')
     point.floatField('nedocs', Math.max(0, nedocs))
     point.floatField('edwin', edwin)
+    point.timestamp(timestamp)
 
     writeApi.writePoint(point)
   }
@@ -143,7 +148,11 @@ const job = new CronJob('*/5 * * * * *', async () => {
     console.log('\nFinished ERROR')
     console.error(e)
   })
-}, null, true, 'Asia/Bangkok')
+}
+
+const job = new CronJob('*/5 * * * * *', async () => {
+  await collectStatisticToInflux()
+}, null, false, 'Asia/Bangkok')
 
 export function startTask () {
   job.start()
