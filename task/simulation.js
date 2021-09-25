@@ -1,4 +1,4 @@
-import { differenceInMilliseconds, format, intervalToDuration } from 'date-fns'
+import { differenceInMilliseconds, differenceInSeconds, format, intervalToDuration } from 'date-fns'
 import task from 'tasuku'
 import { collectStatisticToInflux } from './dataCollector.js'
 import Staff from '../model/staff.js'
@@ -69,7 +69,7 @@ const _config = {
     accident: {
       small: {
         chance: 0, // Percent
-        triage: { 5: 0, 4: 3, 3: 4, 2: 3, 1: 3 }, // Percent
+        triage: { 5: 0, 4: 3, 3: 4, 2: 3, 1: 3 }, // โอกาส
         size: [2, 4],
       },
       mediem: {
@@ -127,20 +127,19 @@ async function randomErEvent (t) {
   }
 
   const staffs = await Staff.find().exec()
-
-  for (const staff of staffs) {
-    const _check = await CheckIn.findOne({ userId: staff._id })
-    if (_check) {
-      // Check out
-      await _check.remove()
-    } else {
-      // Check in
-      await CheckIn.create({
-        userId: staff._id,
-        checkIn: new Date(start),
-      })
-    }
-  }
+  // for (const staff of staffs) {
+  //   const _check = await CheckIn.findOne({ userId: staff._id })
+  //   if (_check) {
+  //     // Check out
+  //     await _check.remove()
+  //   } else {
+  //     // Check in
+  //     await CheckIn.create({
+  //       userId: staff._id,
+  //       checkIn: new Date(start),
+  //     })
+  //   }
+  // }
 
   // Staff output
   output.push(...staffOutput(staffs))
@@ -156,13 +155,13 @@ async function randomErEvent (t) {
 
     let triagePosible = { 5: 3, 4: 2, 3: 2, 2: 1, 1: 0 }
     for (const time in _config.patient.chance) {
-      if (Math.random(0, 100) < _config.patient.chance[time].change) {
+      if (randomNumber(0, 100) < _config.patient.chance[time].change) {
         triagePosible = _config.patient.chance[time].triage
         break
       }
     }
 
-    const r1 = Math.random(0, Object.values(triagePosible).reduce((a, b) => a + b, 0))
+    const r1 = randomNumber(0, Object.values(triagePosible).reduce((a, b) => a + b, 0))
     let sum = 0
     for (const _triage in triagePosible) {
       sum += triagePosible[_triage]
@@ -189,13 +188,28 @@ async function randomErEvent (t) {
 
   // Move patient stage
   const patients = await Patient.find().exec()
-  for (const patient of patients) {
-    if (randomNumber(0, 100) < 1) {
+  for (const patient of patients.filter(p => p.currentStage <= 60)) {
+    let change = 1
+    const LoSall = differenceInSeconds(nowInDate, patient.entry)
+    const LoSstage = differenceInSeconds(nowInDate, patient.stages[patient.stages.length - 1].start)
+
+    if (LoSall > 3600) {
+      change += 2.4
+    }
+    if (LoSstage > 3600) {
+      change += 5
+    } else if (LoSstage > 1800) {
+      change += 1
+    }
+
+    const r2 = randomNumber(0, 100)
+    if (r2 < change) {
       const currentStage = patient.currentStage
       patient.stages[patient.stages.length - 1].end = nowInDate
 
       if (currentStage === 5) {
         // Current stage is 5, next is 60 (Disposition)
+        patient.currentStage = 60
         patient.stages.push({
           stage: 60,
           start: nowInDate,
@@ -204,21 +218,22 @@ async function randomErEvent (t) {
       } else if (currentStage === 60) {
         // Current stage is 60 (Disposition), next will be 61, 62, 63 (Discharged, Admited, Transfered)
         const nextStage = faker.random.arrayElement([61, 62, 63])
+        patient.currentStage = nextStage
         patient.stages.push({
           stage: nextStage,
           start: nowInDate,
           end: nowInDate,
         })
         patient.exit = nowInDate
-      } else {
+      } else if ([1, 2, 3, 4].includes(currentStage)) {
         // Go to next stage
+        patient.currentStage = currentStage + 1
         patient.stages.push({
           stage: currentStage + 1,
           start: nowInDate,
           end: null,
         })
       }
-
       await patient.save()
     }
   }
