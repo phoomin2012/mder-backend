@@ -10,6 +10,7 @@
     "cron": "^1.8.2",
     "date-fns": "^2.22.1",
     "express": "^4.17.1",
+    "faker": "^5.5.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.12.13",
     "passport": "^0.4.1",

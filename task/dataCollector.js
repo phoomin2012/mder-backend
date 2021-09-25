@@ -6,8 +6,6 @@ import StatisticModel from '../model/statistic.js'
 import PatientModel, { PatientStage } from '../model/patient.js'
 
 export async function collectStatisticToInflux (timestamp = new Date()) {
-  const __start = new Date()
-  console.log('🤖 Start collect data to InfluxDB 📈📉')
   const writeApi = client.getWriteApi(org, bucket)
 
   // Chart 1 => patient triage level
@@ -142,16 +140,21 @@ export async function collectStatisticToInflux (timestamp = new Date()) {
     writeApi.writePoint(point)
   }
 
-  writeApi.close().then(() => {
-    console.log(`\tFINISH in ${Date.now() - __start.getTime()}ms`)
-  }).catch(e => {
-    console.log('\nFinished ERROR')
-    console.error(e)
+  writeApi.close().catch(e => {
+    throw e
   })
 }
 
 const job = new CronJob('*/5 * * * * *', async () => {
-  await collectStatisticToInflux()
+  try {
+    const __start = new Date()
+    console.log('🤖 Start collect data to InfluxDB 📈📉')
+    await collectStatisticToInflux()
+    console.log(`\tFINISH in ${Date.now() - __start.getTime()}ms`)
+  } catch (e) {
+    console.log('\nFinished ERROR')
+    console.error(e)
+  }
 }, null, false, 'Asia/Bangkok')
 
 export function startTask () {
@@ -167,5 +170,6 @@ export function overcrowdNEDOCS (currentPatient, waitForAdmitPatient, ventilator
 }
 
 export function overcrowdEDWIN (currentPatient, lv1Patient, lv2Patient, lv3Patient, lv4Patient, lv5Patient, currentStaff, EDBeds = 6) {
-  return ((lv5Patient * 1) + (lv4Patient * 2) + (lv3Patient * 3) + (lv2Patient * 4) + (lv1Patient * 5)) / ((currentStaff === 0 ? 0.01 : currentStaff) * (EDBeds - currentPatient))
+  const h = currentStaff * (EDBeds - currentPatient)
+  return ((lv5Patient * 1) + (lv4Patient * 2) + (lv3Patient * 3) + (lv2Patient * 4) + (lv1Patient * 5)) / (h === 0 ? 0.01 : h)
 }
