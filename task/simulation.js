@@ -4,6 +4,7 @@ import { collectStatisticToInflux } from './dataCollector.js'
 import Staff from '../model/staff.js'
 // eslint-disable-next-line no-unused-vars
 import Patient, { PatientStage } from '../model/patient.js'
+// eslint-disable-next-line no-unused-vars
 import CheckIn from '../model/checkIn.js'
 // eslint-disable-next-line no-unused-vars
 import Statistic from '../model/statistic.js'
@@ -52,18 +53,18 @@ const _config = {
     chance: {
       morning: {
         hours: [4, 5, 6, 7, 8, 9, 10, 11],
-        chance: 0, // Percent
-        triage: { 5: 3, 4: 3, 3: 2, 2: 1, 1: 0 }, // โอกาส
+        chance: 2, // Percent
+        triage: { 5: 100, 4: 80, 3: 50, 2: 30, 1: 10 }, // โอกาส
       },
       noon: {
         hours: [12, 13, 14, 15, 16, 17],
-        chance: 0, // Percent
-        triage: { 5: 3, 4: 3, 3: 2, 2: 1, 1: 0 }, // โอกาส
+        chance: 1, // Percent
+        triage: { 5: 100, 4: 80, 3: 50, 2: 30, 1: 10 }, // โอกาส
       },
       night: {
         hours: [18, 19, 20, 21, 22, 23, 0, 1, 2, 3],
-        chance: 0, // Percent
-        triage: { 5: 3, 4: 3, 3: 2, 2: 1, 1: 0 }, // โอกาส
+        chance: 0.25, // Percent
+        triage: { 5: 100, 4: 80, 3: 50, 2: 30, 1: 10 }, // โอกาส
       },
     },
     accident: {
@@ -88,12 +89,14 @@ const _config = {
 // eslint-disable-next-line no-unused-vars
 const _temp = {
   now: new Date(),
+  staffs: [],
   staff: {
     currentPhysician: 0,
     targetPhysician: 0,
     currentNurse: 0,
     targetNurse: 0,
   },
+  patients: [],
 }
 
 async function randomErEvent (t) {
@@ -126,8 +129,7 @@ async function randomErEvent (t) {
     _temp.staff.targetNurse = c.minNurse
   }
 
-  const staffs = await Staff.find().exec()
-  // for (const staff of staffs) {
+  // for (const staff of _temp.staffs) {
   //   const _check = await CheckIn.findOne({ userId: staff._id })
   //   if (_check) {
   //     // Check out
@@ -142,11 +144,19 @@ async function randomErEvent (t) {
   // }
 
   // Staff output
-  output.push(...staffOutput(staffs))
+  output.push(...staffOutput())
 
   // New patient
+  let newPatientChance = 0
+  if (_config.patient.chance.morning.hours.includes(currentHour)) {
+    newPatientChance = _config.patient.chance.morning.chance
+  } else if (_config.patient.chance.noon.hours.includes(currentHour)) {
+    newPatientChance = _config.patient.chance.noon.chance
+  } else if (_config.patient.chance.night.hours.includes(currentHour)) {
+    newPatientChance = _config.patient.chance.night.chance
+  }
 
-  if (randomNumber(0, 1000) < 1) {
+  if (randomNumber(0, 100) < newPatientChance) {
     // Create new patient
     const hospitalNo = randomNumber(0, 9999999)
     const patientFirstName = faker.name.firstName()
@@ -171,7 +181,7 @@ async function randomErEvent (t) {
       }
     }
 
-    await Patient.create({
+    _temp.patients.push(await Patient.create({
       hospitalNumber: hospitalNo,
       bedNumber: '',
       name: patientFirstName,
@@ -183,12 +193,11 @@ async function randomErEvent (t) {
         { stage: 1, start: nowInDate, end: null },
       ],
       entry: nowInDate,
-    })
+    }))
   }
 
   // Move patient stage
-  const patients = await Patient.find().exec()
-  for (const patient of patients.filter(p => p.currentStage <= 60)) {
+  for (const patient of _temp.patients.filter(p => p.currentStage <= 60)) {
     let change = 1
     const LoSall = differenceInSeconds(nowInDate, patient.entry)
     const LoSstage = differenceInSeconds(nowInDate, patient.stages[patient.stages.length - 1].start)
@@ -240,22 +249,22 @@ async function randomErEvent (t) {
 
   // Remove patient
   if (currentHour === 0 && nowInDate.getMinutes() === 0 && nowInDate.getSeconds() === 0) {
-    for (const patient of patients) {
+    for (const patient of _temp.patients) {
       if (patient.exit) {
-        const i = patients.findIndex(p => p._id === patient._id)
+        const i = _temp.patients.findIndex(p => p._id === patient._id)
         await patient.remove()
-        patients.splice(i, 1)
+        _temp.patients.splice(i, 1)
       }
     }
   }
 
   // Patient output
-  const t1 = patients.filter(p => p.triage === 1)
-  const t2 = patients.filter(p => p.triage === 2)
-  const t3 = patients.filter(p => p.triage === 3)
-  const t4 = patients.filter(p => p.triage === 4)
-  const t5 = patients.filter(p => p.triage === 5)
-  output.push(`● Total patient: ${patients.length}`)
+  const t1 = _temp.patients.filter(p => p.triage === 1)
+  const t2 = _temp.patients.filter(p => p.triage === 2)
+  const t3 = _temp.patients.filter(p => p.triage === 3)
+  const t4 = _temp.patients.filter(p => p.triage === 4)
+  const t5 = _temp.patients.filter(p => p.triage === 5)
+  output.push(`● Total patient: ${_temp.patients.length}`)
   output.push('-----------┼------┼------┼-------┼---------┼-----┼-----------┼----------┼-----┼-----')
   output.push('   Stage   |Triage|Invest|Consult|Diagnosis|Treat|Disposition|Discharged|Admit|Trans')
   output.push('-----------┼------┼------┼-------┼---------┼-----┼-----------┼----------┼-----┼-----')
@@ -272,16 +281,16 @@ async function randomErEvent (t) {
   t.setOutput(output.join('\n    '))
 }
 
-function staffOutput (staffs) {
+function staffOutput () {
   const output = []
 
-  output.push(`● Check-in staff: ${_temp.staff.currentPhysician} Physician + ${_temp.staff.currentNurse} Nurse = ${_temp.staff.currentPhysician + _temp.staff.currentNurse} (Total staff ${staffs.length})`)
+  output.push(`● Check-in staff: ${_temp.staff.currentPhysician} Physician + ${_temp.staff.currentNurse} Nurse = ${_temp.staff.currentPhysician + _temp.staff.currentNurse} (Total staff ${_temp.staffs.length})`)
 
   return output
 }
 
 function patientTriageInfo (patients) {
-  return `  ${filterStage(patients, 1).length}  |  ${filterStage(patients, 2).length}   |   ${filterStage(patients, 3).length}   |    ${filterStage(patients, 4).length}    |  ${filterStage(patients, 5).length}  |     ${filterStage(patients, 60).length}     |     ${filterStage(patients, 61).length}    |  ${filterStage(patients, 62).length}  |  ${filterStage(patients, 63).length}`
+  return `  ${filterStage(patients, 1).length}  |   ${filterStage(patients, 2).length}  |   ${filterStage(patients, 3).length}   |    ${filterStage(patients, 4).length}    |  ${filterStage(patients, 5).length}  |     ${filterStage(patients, 60).length}     |     ${filterStage(patients, 61).length}    |  ${filterStage(patients, 62).length}  |  ${filterStage(patients, 63).length}`
 }
 
 /**
@@ -341,6 +350,9 @@ async function doErEvent (t) {
     if (start > _temp.now) {
       // Set timer for next event
       setTimeout(async () => {
+        _temp.staffs = await Staff.find().exec()
+        _temp.patients = await Patient.find().exec()
+
         doErEvent(t)
       }, 1000)
     } else {
@@ -356,6 +368,9 @@ async function doErEvent (t) {
 
 export async function startTask () {
   task(`Start from ${format(start, 'yyyy-MM-dd HH:mm:ss')}`, async (t) => {
+    _temp.staffs = await Staff.find().exec()
+    _temp.patients = await Patient.find().exec()
+
     return await doErEvent(t)
   })
 }
