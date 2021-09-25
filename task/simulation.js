@@ -12,7 +12,7 @@ import CheckIn from '../model/checkIn.js'
 import Statistic from '../model/statistic.js'
 
 const __start = new Date()
-const startest = new Date('2021-09-24 00:00:00').getTime()
+const startest = new Date('2021-09-25 12:00:00').getTime()
 let start = startest
 
 // eslint-disable-next-line no-unused-vars
@@ -83,13 +83,19 @@ const _config = {
 // eslint-disable-next-line no-unused-vars
 const _temp = {
   now: new Date(),
+  staff: {
+    targetPhysician: 0,
+    targetNurse: 0,
+  },
 }
 
 async function randomErEvent (t) {
+  const output = [`[${format(start, 'yyyy-MM-dd HH:mm:ss')}]`]
+  const nowInDate = new Date(_temp.now)
+
   // Staff check in/out
   //  ....
   const staffs = await Staff.find().exec()
-  t.setOutput(`[${format(start, 'yyyy-MM-dd HH:mm:ss')}] ${start - _temp.now}`)
   // for (const staff of staffs) {
   //   const _check = await CheckIn.findOne({ userId: staff._id })
   //   if (_check) {
@@ -103,24 +109,38 @@ async function randomErEvent (t) {
   //     })
   //   }
   // }
+  output.push(`Total staff: ${staffs.length},`)
 
   // New patient
   //  ....
 
   // Move patient stage
-  //  ....
+  const patients = await Patient.find().exec()
+  output.push(`Total patient: ${patients.length}`)
 
   // Remove patient
   //  ....
+
+  t.setOutput(output.join(' '))
 }
 
 function remindTimeText () {
   const d2 = differenceInMilliseconds(_temp.now, __start)
-  const remind = Math.max(0, (_temp.now - start) / ((start - startest) / d2))
-  const s = Math.floor(remind / 1000) % 60
-  const m = Math.floor(remind / 1000 % 3600 / 60)
-  const h = Math.floor(remind / 1000 / 3600)
-  return `~${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
+  const raw = (_temp.now - start) / ((start - startest) / d2)
+  if (raw > 0) {
+    const remind = Math.max(0, raw)
+    const s = Math.floor(remind / 1000) % 60
+    const m = Math.floor(remind / 1000 % 3600 / 60)
+    const h = Math.floor(remind / 1000 / 3600)
+    return `ถึงปัจจุบันใน ${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`
+  } else {
+    return 'ปัจจุบัน'
+  }
+}
+
+function totalRunTime () {
+  const d = intervalToDuration({ start: __start, end: _temp.now })
+  return `${d.hours < 10 ? '0' + d.hours : d.hours}:${d.minutes < 10 ? '0' + d.minutes : d.minutes}:${d.seconds < 10 ? '0' + d.seconds : d.seconds}`
 }
 
 async function doErEvent (t) {
@@ -134,8 +154,7 @@ async function doErEvent (t) {
       // await collectStatisticToInflux(start)
     }
 
-    const d = intervalToDuration({ start: __start, end: _temp.now })
-    t.setStatus(`${d.hours < 10 ? '0' + d.hours : d.hours}:${d.minutes < 10 ? '0' + d.minutes : d.minutes}:${d.seconds < 10 ? '0' + d.seconds : d.seconds} ${remindTimeText()}`)
+    t.setStatus(`${totalRunTime()}, ${remindTimeText()}`)
 
     if (start > _temp.now) {
       // Set timer for next event
