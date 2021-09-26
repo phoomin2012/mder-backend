@@ -35,12 +35,13 @@ io.on('connect', async (socket) => {
   onCountdownRemove(socket)
 })
 
-const [,, mode] = process.argv
+const [, , mode] = process.argv
 
 async function run () {
   await connectDB()
   if (mode === 'mock') {
     (await import('./task/simulation.js')).startTask()
+    await startServer()
   } else {
     startCollectorTask()
     await startServer()
