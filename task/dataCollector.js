@@ -65,7 +65,7 @@ export function collectStatisticToInflux (timestamp = new Date()) {
         const lastStage = patient.stages[patient.stages.length - 1]
 
         people[lastStage.stage] += 1
-        times[lastStage.stage] += differenceInSeconds(new Date(), lastStage.start)
+        times[lastStage.stage] += differenceInSeconds(timestamp, lastStage.start)
       }
 
       const point = new Point('timeInterval')
@@ -102,7 +102,7 @@ export function collectStatisticToInflux (timestamp = new Date()) {
 
       for (const patient of patients) {
         peoples += 1
-        times += differenceInSeconds(new Date(), patient.entry)
+        times += differenceInSeconds(timestamp, patient.entry)
       }
 
       const point = new Point('timeStay')
@@ -114,23 +114,24 @@ export function collectStatisticToInflux (timestamp = new Date()) {
 
     // Chart 5 => overcrowding score
     if (patients && statistic) {
-    // NEDOCS
+      const currentPatients = patients.filter(p => [1, 2, 3, 4, 5, 60].includes(p.currentStage))
+      // NEDOCS
       let LOSHr = 0; let lastAdmitHr = 0
-      const currentPatient = patients.length
-      const waitForAdmitPatient = patients.filter(patient => patient.currentStage === PatientStage.triage).length
-      const ventilatorPatient = patients.filter(patient => patient.ventilator).length
-      if (patients.length > 0) {
-        LOSHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
-        lastAdmitHr = differenceInSeconds(new Date(), patients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
+      const currentPatient = currentPatients.length
+      const waitForAdmitPatient = currentPatients.filter(patient => patient.currentStage === PatientStage.triage).length
+      const ventilatorPatient = currentPatients.filter(patient => patient.ventilator).length
+      if (currentPatients.length > 0) {
+        LOSHr = differenceInSeconds(timestamp, currentPatients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
+        lastAdmitHr = differenceInSeconds(timestamp, currentPatients.reduce((last, patient) => differenceInSeconds(last.entry, patient.entry) > 0 ? patient : last).entry) / 3600
       }
 
       const nedocs = overcrowdNEDOCS(currentPatient, waitForAdmitPatient, ventilatorPatient, LOSHr, lastAdmitHr)
 
-      const lv1Patient = patients.filter(patient => patient.triage === 1).length
-      const lv2Patient = patients.filter(patient => patient.triage === 2).length
-      const lv3Patient = patients.filter(patient => patient.triage === 3).length
-      const lv4Patient = patients.filter(patient => patient.triage === 4).length
-      const lv5Patient = patients.filter(patient => patient.triage === 5).length
+      const lv1Patient = currentPatients.filter(patient => patient.triage === 1).length
+      const lv2Patient = currentPatients.filter(patient => patient.triage === 2).length
+      const lv3Patient = currentPatients.filter(patient => patient.triage === 3).length
+      const lv4Patient = currentPatients.filter(patient => patient.triage === 4).length
+      const lv5Patient = currentPatients.filter(patient => patient.triage === 5).length
       const currentStaff = statistic.currentPhysician + statistic.currentNurse
       const edwin = overcrowdEDWIN(currentPatient, lv1Patient, lv2Patient, lv3Patient, lv4Patient, lv5Patient, currentStaff)
 
