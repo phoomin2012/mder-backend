@@ -20,7 +20,7 @@
     "validator": "^13.6.0"
   },
   "scripts": {
-    "start": "nodemon app",
+    "start": "nodemon app --ignore cache/*",
     "mock": "node _mock",
     "test": "node --no-warnings --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles"
   },

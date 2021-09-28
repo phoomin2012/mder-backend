@@ -4,11 +4,13 @@ import { collectStatisticToInflux } from './dataCollector.js'
 import Staff, { StaffRole } from '../model/staff.js'
 import Patient, { PatientStage } from '../model/patient.js'
 import CheckIn from '../model/checkIn.js'
-// eslint-disable-next-line no-unused-vars
 import Statistic from '../model/statistic.js'
 import faker from 'faker'
-// eslint-disable-next-line no-unused-vars
 import { io } from '../module/server.js'
+import * as fs from 'fs'
+import * as path from 'path'
+
+process.env.SIMULATION_SINCE = process.env.SIMULATION_SINCE || '2021-09-01 00:00:00'
 
 const __start = new Date()
 const startest = new Date('2021-09-01 00:00:00').getTime()
@@ -585,6 +587,7 @@ async function doErEvent (t) {
       // Set timer for next event
       setTimeout(async () => {
         doErEvent(t)
+        saveTemp()
       }, 1000)
     } else {
       // Do ER event immediate
@@ -592,12 +595,45 @@ async function doErEvent (t) {
         // Go to new date
         start += 5 * 1000
         doErEvent(t)
+        saveTemp()
       })
     }
   })
 }
 
+async function saveTemp () {
+  fs.writeFileSync(path.resolve('./cache/sim.json'), JSON.stringify({
+    now: start,
+    staff: {
+      targetPhysician: _temp.staff.targetPhysician,
+      targetNurse: _temp.staff.targetNurse,
+    },
+    task: _temp.task,
+  }))
+}
+
+async function loadTemp () {
+  if (fs.existsSync(path.resolve('./cache/sim.json'))) {
+    const temp = JSON.parse(fs.readFileSync(path.resolve('./cache/sim.json')))
+
+    console.log(`Continue from ${format(new Date(temp.now), 'yyyy-MM-dd HH:mm:ss')}`)
+
+    start = temp.now
+    _temp.staff.targetPhysician = temp.staff.targetPhysician
+    _temp.staff.targetNurse = temp.staff.targetNurse
+    _temp.task = temp.task
+    return true
+  } else {
+    return false
+  }
+}
+
 async function initialData () {
+  if (!loadTemp()) {
+    await CheckIn.deleteMany({})
+    await Patient.deleteMany({})
+  }
+
   _temp.staffs = await Staff.find().exec()
   _temp.patients = await Patient.find().exec()
 
