@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+process.env.MONGO_URL = process.env.MONGO_URL || '127.0.0.1:28018'
+
 export default function () {
   return new Promise((resolve, reject) => {
     if (mongoose.connection.readyState === 1) {
@@ -8,7 +10,7 @@ export default function () {
       mongoose.connection.once('connected', resolve)
       mongoose.connection.once('error', reject)
     } else {
-      mongoose.connect('mongodb://127.0.0.1:28018/mder', {
+      mongoose.connect(`mongodb://${process.env.MONGO_URL}/mder`, {
         useCreateIndex: true,
         useNewUrlParser: true,
         useUnifiedTopology: true,

@@ -13,6 +13,18 @@ import HistoryRoute from './route/history.js'
 import onConnect from './socket/onConnect.js'
 import onCountdownRemove from './socket/onCountdownRemove.js'
 import { startTask as startCollectorTask } from './task/dataCollector.js'
+// Import for initial
+import staffModel, { StaffRole } from './model/staff.js'
+import { hashPassword } from './module/password.js'
+import faker from 'faker'
+
+// Env initial
+process.env.SIMULATION = (process.env.SIMULATION === 'true' || process.env.SIMULATION === true)
+process.env.INIT_USERNAME = process.env.INIT_USERNAME || 'test'
+process.env.INIT_PASSWORD = process.env.INIT_PASSWORD || 'test'
+process.env.INIT_USER_ROLE = process.env.INIT_USER_ROLE || 'physician'
+process.env.INIT_PHYSICIAN = process.env.INIT_PHYSICIAN || 0
+process.env.INIT_NURSE = process.env.INIT_NURSE || 0
 
 // Express Middleware
 
@@ -35,18 +47,56 @@ io.on('connect', async (socket) => {
   onCountdownRemove(socket)
 })
 
-const [, , mode] = process.argv
+async function initialSystem () {
+  const staff = await staffModel.findOne({
+    username: process.env.INIT_USERNAME,
+  })
+
+  if (!staff) {
+    console.log('Initial system data...')
+
+    await staffModel.create({
+      username: process.env.INIT_USERNAME,
+      password: hashPassword(process.env.INIT_PASSWORD),
+      name: 'Initial',
+      lastName: 'Account',
+      role: process.env.INIT_USER_ROLE,
+    })
+
+    for (let i = 0; i < process.env.INIT_PHYSICIAN; i++) {
+      await staffModel.create({
+        username: `physician${i}`,
+        password: hashPassword(process.env.INIT_PASSWORD),
+        name: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        role: StaffRole.physician,
+      })
+    }
+    for (let i = 0; i < process.env.INIT_NURSE; i++) {
+      await staffModel.create({
+        username: `nurse${i}`,
+        password: hashPassword(process.env.INIT_PASSWORD),
+        name: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        role: StaffRole.nurse,
+      })
+    }
+
+    console.log('Initial system data success ✅')
+  }
+}
 
 async function run () {
   await connectDB()
-  if (mode === 'mock') {
+  await initialSystem()
+  if (process.env.SIMULATION) {
     (await import('./task/simulation.js')).startTask()
-    await startServer()
   } else {
     startCollectorTask()
-    await startServer()
   }
+  await startServer()
 }
+
 async function forTest () {
   await connectDB()
 }

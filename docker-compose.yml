@@ -1,10 +1,100 @@
-version: '2'
+version: '3.3'
+
 services:
+  proxy:
+    image: traefik:v2.4
+    restart: always
+    command: 
+        - '--providers.docker'
+        - '--entryPoints.web.address=:80'
+        - '--entryPoints.websecure.address=:443'
+        - '--providers.providersThrottleDuration=2s'
+        - '--providers.docker.watch=true'
+        - '--providers.docker.exposedbydefault=false'
+        - '--providers.docker.constraints=Label(`traefik.tags`,`public`)'
+        - '--accessLog.bufferingSize=0'
+        - '--api=true'
+        - '--api.insecure=true'
+        - '--ping.entryPoint=web'
+    ports:
+        # The HTTP port
+        - 80:80
+        # The HTTPS port
+        - 443:443
+        # The Web UI (enabled by --api.insecure=true)
+        - 8080:8080
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - /etc/ssl/certs/:/certs/:ro
+        - /home/ubuntu/traefik.yml:/etc/traefik/dynamic_conf/conf.yml:ro
+    restart: always
+    labels:
+        - traefik.enable=true
+        - traefik.tags=public
+        - traefik.http.middlewares.my-basic-auth.basicauth.users=admin:$$apr1$$SnHDtk1N$$cpc7xSXXrMVnPYdF01WdC0
+        - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
+        - traefik.http.routers.traefik-dashboard.service=traefik-dashboard
+        - traefik.http.routers.traefik-dashboard.entrypoints=web
+    environment:
+      - TZ=Asia/Bangkok
   mongo:
     image: 'mongo:4.4'
-    ports:
-      - '28018:27017'
-  influxdb:
+    # ports:
+    #   - '28018:27017'
+    restart: always
+  influx:
     image: 'influxdb:2.0'
     ports:
       - '7076:8086'
+    restart: always
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: 'setup'
+      DOCKER_INFLUXDB_INIT_USERNAME: 'root'
+      DOCKER_INFLUXDB_INIT_PASSWORD: '1qaz@WSX3edc'
+      DOCKER_INFLUXDB_INIT_ORG: 'mder'
+      DOCKER_INFLUXDB_INIT_BUCKET: 'statistics'
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: 'xqMcanwN1tSLj-cGMYG1jyXl20UsZV1ptjloAB6r7GmYzmkSoKRCLWdVu1CZPtKXgauq9UN4nGoOQIPzpdqZ_A=='
+  backend:
+    build: '.'
+    depends_on:
+      - "mongo"
+      - "influx"
+    links:
+      - mongo
+      - influx
+    volumes:
+        - /home/ubuntu/mder-cache:/app/cache
+    restart: always
+    environment:
+      SIMULATION: true
+      SIMULATION_SINCE: '2021-09-01 00:00:00'
+      MONGO_URL: 'mongo:27017'
+      INFLUX_URL: 'influx:8086'
+      INFLUXDB_TOKEN: 'xqMcanwN1tSLj-cGMYG1jyXl20UsZV1ptjloAB6r7GmYzmkSoKRCLWdVu1CZPtKXgauq9UN4nGoOQIPzpdqZ_A=='
+      INFLUXDB_USERNAME: 'root'
+      INFLUXDB_PASSWORD: '1qaz@WSX3edc$RFV'
+      INIT_USERNAME: 'test'
+      INIT_PASSWORD: 'test'
+      INIT_USER_ROLE: 'physician'
+      INIT_PHYSICIAN: 10
+      INIT_NURSE: 10
+  frontend:
+    build: '../mder-frontend'
+    depends_on:
+      - "backend"
+    links:
+      - backend
+    ports:
+      - '5555:5555'
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.tags=public
+      - traefik.http.services.frontend.loadbalancer.server.port=5555
+      - traefik.http.routers.frontend.rule=Host(`showpro.hypercontrol.io`)
+      - traefik.http.routers.frontend.service=frontend
+      - traefik.http.routers.frontend.priority=1000
+      - traefik.http.routers.frontend.entrypoints=websecure
+      - traefik.http.routers.frontend.tls=true
+    environment:
+      BACKEND_URL: 'backend:3001'
